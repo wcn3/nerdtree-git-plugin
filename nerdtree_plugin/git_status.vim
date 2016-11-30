@@ -55,7 +55,7 @@ endif
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
-        call g:NERDTreeGitStatusRefresh()
+        call g:NERDTreeGitStatusRefresh(a:event.subject.getParent().str())
     endif
     let l:path = a:event.subject
     let l:flag = g:NERDTreeGetGitStatusPrefix(l:path)
@@ -67,12 +67,12 @@ endfunction
 
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
-function! g:NERDTreeGitStatusRefresh()
+function! g:NERDTreeGitStatusRefresh(root)
     let b:NERDTreeCachedGitFileStatus = {}
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
-    let l:root = b:NERDTree.root.path.str()
+    let l:root = a:root
     let l:gitcmd = 'git -c color.status=false status -s'
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
@@ -133,13 +133,17 @@ endfunction
 " Args: path
 let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
+let s:GitStatusCacheLastPath = ''
 function! g:NERDTreeGetGitStatusPrefix(path)
-    if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
-        let s:GitStatusCacheTime = localtime()
-        call g:NERDTreeGitStatusRefresh()
+    let l:dir = a:path.getParent().str()
+    if (l:dir != s:GitStatusCacheLastPath) || (localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry)
+         let s:GitStatusCacheTime = localtime()
+         let s:GitStatusCacheLastPath = l:dir
+         call g:NERDTreeGitStatusRefresh(l:dir)
     endif
+
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTree.root.path.str() . a:path.Slash()
+    let l:cwd = l:dir . a:path.Slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
