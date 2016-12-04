@@ -106,7 +106,6 @@ function! g:NERDTreeGitStatusRefresh(root)
         let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
         let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
-        call s:NERDTreeCacheDirtyDir(l:pathStr)
         if l:statusKey == 'Ignored'
           if isdirectory(l:pathStr)
             let b:NERDTreeCachedGitDirtyDir[fnameescape(l:pathStr)] = l:statusKey
